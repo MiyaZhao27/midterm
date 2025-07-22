@@ -3,7 +3,9 @@ title: "ME314_midterm_240006078"
 subtitle: "LSE ME314: Introduction to Data Science and Machine Learning"
 date-modified: "22 July 2025" 
 toc: true
-format: html
+format: 
+    html:
+        self-contained: true
 execute:
   echo: true
   eval: true

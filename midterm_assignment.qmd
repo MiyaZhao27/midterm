@@ -6,7 +6,7 @@ toc: true
 format: html
 execute:
   echo: true
-  eval: true
+  eval: false
 ---
 
 ## Submission Instructions
@@ -63,14 +63,36 @@ set.seed(123)
 
 
 ```{r}
+# load the airquality dataset into my own object then observe its structure
 data("airquality")
 aq <- airquality
-# write your code answer here
+str(air_quality)
+
+# delete rows with NA then observing its structure again to see how many rows were deleted
+aq = na.omit(aq)
+str(aq)
+
+# loading dplyr in order to filter and clean the dataset some more
+library(dplyr)
+
+# filtering the dataset to remove all rows were the value of Ozone is more than 2sd above the mean
+
+# finding the mean and sd of Ozone then the max value it can be
+oz_mean = mean(aq[["Ozone"]]) 
+oz_sd = sd(aq[["Ozone"]])
+oz_max = oz_mean + 2*oz_sd
+
+# filtering the dataframe to only include up to the max value (2sd above the mean) and loading it into aq_clean
+aq_clean = aq %>%
+    filter(Ozone <= oz_max)
+
+# finding the dimensions of aq_clean
+dim(aq_clean) 
 ```
 
 ::: {.callout-tip title = "Answer" collapse="true"}
 **Answer**:
-# write your text answer here
+There are 105 rows left in the dataframe.
 :::
 
 **1.2 Summarising and transforming data:**
@@ -87,14 +109,30 @@ Take your `aq_clean` dataframe and follow these steps in order:
 
 ```{r}
 library(tidyverse)
-# write your code answer here
+# adding a new column with the temperature in celcius
+aq_clean = aq_clean %>%
+    mutate("Temp_Cels" = (Temp - 32) * (5/9))
+
+# Getting the average wind and temperature in celcius by month 
+aq_sum = aq_clean %>%
+    group_by(Month) %>%
+    summarise(mean(Wind), mean(Temp_Cels))
+
+# filtering to get the row with the max mean wind
+aq_sum %>%
+    filter(aq_sum[["mean(Wind)"]] == max(aq_sum[["mean(Wind)"]]))
+
+# filtering to get the row with the median mean temperature in celcius
+aq_sum %>%
+    filter(aq_sum[["mean(Temp_Cels)"]] == median(aq_sum[["mean(Temp_Cels)"]]))
+
 ```
 
 
 ::: {.callout-tip title = "Answer" collapse="true"}
 **Answer**:
-# write your text answer here
-:::
+Month 6 has the highest average wind with 12.2mph. Month 6 also has the median average temperature value at 25.7 degrees celcius.
+::: 
 
 **1.3 For-loop operations:**
 
@@ -117,25 +155,29 @@ You have cleaned air‑quality data in a data frame `aq_clean,` and want to quan
 - Report both the sample mean (calculated in step 1) and its bootstrapped standard error. 
 
 ```{r}
+# find the sample mean of Solar.R
+sr_mean = mean(aq_clean$Solar.R)
 # Number of bootstrap replicates
-# write your code answer here
-n_boot <-
+n_boot <- 1000
     # Pre-allocate storage
-    boot_means <-
+    boot_means <- numeric(n_boot)
     # Loop to generate bootstrap means
     for (i in 1:n_boot) {
-        # Draw bootstrap sample of the same size as the original vector
+        sample = sample(aq_clean$Solar.R, length(aq_clean$Solar.R), replace = TRUE)
+        boot_means[i] = mean(sample)
     }
 
+# find the sd of the bootstraped means
+sr_sd = sd(boot_means)
 
 # Print the results
-cat("Mean of Solar.R     :", , "\n")
-cat("Bootstrap std. error     :", , "\n")
+cat("Mean of Solar.R     :", sr_mean, "\n")
+cat("Bootstrap std. error     :", sr_sd , "\n")
 ```
 
 ::: {.callout-tip title = "Answer" collapse="true"}
 **Answer**:
-# write your text answer here
+# The sample mean is 181.8667 lang and the standard error is 8.774674 lang.
 :::
 
 **1.4 Control flow:**
@@ -149,14 +191,22 @@ Use an if/else control flow to label days by whether they exceed the mean `Ozone
 - Calculate how many "High" days there are and report this number.
 
 ```{r}
-# write your code answer here
+# recalculating the mean of the Ozone
+oz_mean = mean(aq_clean$Ozone)
+oz_mean
 
+#creating a new categorical varaible
+aq_clean = aq_clean %>%
+    mutate("Ozone_Status" = ifelse((aq_clean[["Ozone"]] > oz_mean), "High", "Low"))
+
+# calculating how many High days there are
+table(aq_clean$Ozone_Status)
 ```
 
 
 ::: {.callout-tip title = "Answer" collapse="true"}
 **Answer**:
-# write your text answer here
+# There are 40 "High" days.
 :::
 
 ### Question 2: Data Generating Processes (10 Marks)
